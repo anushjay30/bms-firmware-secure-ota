@@ -1,0 +1,5 @@
+python-can>=4.4,<5
+cantools>=39,<46
+pytest>=8
+cryptography>=42
+pyserial>=3.5

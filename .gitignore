@@ -1,0 +1,14 @@
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.o
+*.d
+
+# Signing keys: generated locally by tools/keygen.py, NEVER committed.
+keys/*
+!keys/README.md
+*.pem
+*.key

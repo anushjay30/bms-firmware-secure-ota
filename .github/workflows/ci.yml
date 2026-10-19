@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    name: Build (POSIX + Cortex-M3 bootloader/app), unit tests, static analysis, QEMU boot
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cppcheck \
+            gcc-arm-none-eabi libnewlib-arm-none-eabi qemu-system-arm
+
+      # Python first: the Cortex-M3 build signs its images (tools/sign_image.py).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python dependencies
+        run: python -m pip install -r sim/requirements.txt
+
+      - name: Build firmware (POSIX simulator)
+        run: make -j"$(nproc)" TARGET=posix
+
+      # A fresh development signing key is generated for this run (keys/ is
+      # never committed), so every image below is signed with it.
+      - name: Build bootloader + application for both slots, signed (Cortex-M3, QEMU mps2-an385)
+        run: make -j"$(nproc)" TARGET=qemu PYTHON=python
+
+      - name: Memory usage (Cortex-M3)
+        run: make size TARGET=qemu
+
+      - name: Unit tests (ASan + UBSan)
+        run: make test
+
+      - name: cppcheck
+        run: make cppcheck
+
+      - name: Boot bootloader + slot A in QEMU, wait for "BMS ready"
+        run: make smoke TARGET=qemu PYTHON=python
+
+      - name: Offline tests (DBC <-> C <-> Python consistency, signing tools)
+        run: cd sim && python -m pytest -v tests/test_protocol.py tests/test_tools.py
+
+      - name: Upload Cortex-M3 images and map files
+        uses: actions/upload-artifact@v4
+        with:
+          name: bms-qemu-images
+          path: |
+            build/qemu/bootloader.elf
+            build/qemu/bootloader.map
+            build/qemu/app_slot?.elf
+            build/qemu/app_slot?.map
+            build/qemu/app_slot?.signed.bin
+
+  scenario:
+    # End-to-end tests on a virtual CAN bus. Kept non-blocking: shared runners
+    # have noisy timing, and the vcan/slcan modules depend on the runner kernel.
+    # The qemu leg includes the firmware update scenarios (sim/tests/test_ota.py).
+    name: Scenario tests (${{ matrix.target }})
+    runs-on: ubuntu-24.04
+    needs: build-test
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [posix, qemu]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install tools and CAN kernel modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends can-utils \
+            gcc-arm-none-eabi libnewlib-arm-none-eabi qemu-system-arm \
+            "linux-modules-extra-$(uname -r)" || true
+          sudo modprobe slcan || true
+          sudo bash scripts/setup_vcan.sh vcan0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python dependencies
+        run: python -m pip install -r sim/requirements.txt
+
+      - name: Build
+        run: |
+          make -j"$(nproc)" TARGET=${{ matrix.target }} PYTHON=python
+          if [ "${{ matrix.target }}" = qemu ]; then make TARGET=qemu PYTHON=python test-images; fi
+
+      - name: Run scenarios
+        env:
+          BMS_TIMING_SLACK_MS: "50"
+        run: make scenario TARGET=${{ matrix.target }} PYTHON=python

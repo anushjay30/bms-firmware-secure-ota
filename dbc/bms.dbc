@@ -1,0 +1,148 @@
+VERSION "1.0"
+
+
+NS_ :
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	BA_DEF_DEF_
+
+BS_:
+
+BU_: BMS VCU SIM TESTER
+
+
+BO_ 80 BMS_FaultEvent: 8 BMS
+ SG_ FaultId : 0|8@1+ (1,0) [0|6] "" VCU,TESTER
+ SG_ CellNumber : 8|8@1+ (1,0) [0|12] "" VCU,TESTER
+ SG_ FaultValue : 16|32@1- (1,0) [-2147483648|2147483647] "" VCU,TESTER
+ SG_ FaultsLatched : 48|8@1+ (1,0) [0|255] "" VCU,TESTER
+ SG_ EventCounter : 56|8@1+ (1,0) [0|255] "" VCU,TESTER
+
+BO_ 96 VCU_Command: 8 VCU
+ SG_ Cmd_CRC : 0|8@1+ (1,0) [0|255] "" BMS
+ SG_ Cmd_AliveCounter : 8|4@1+ (1,0) [0|15] "" BMS
+ SG_ Command : 16|8@1+ (1,0) [0|3] "" BMS
+
+BO_ 256 BMS_Status: 8 BMS
+ SG_ Status_CRC : 0|8@1+ (1,0) [0|255] "" VCU,TESTER
+ SG_ Status_AliveCounter : 8|4@1+ (1,0) [0|15] "" VCU,TESTER
+ SG_ State : 12|3@1+ (1,0) [0|3] "" VCU,TESTER
+ SG_ MeasValid : 15|1@1+ (1,0) [0|1] "" VCU,TESTER
+ SG_ FaultsLatched : 16|8@1+ (1,0) [0|255] "" VCU,TESTER
+ SG_ FaultsActive : 24|8@1+ (1,0) [0|255] "" VCU,TESTER
+ SG_ SoC : 32|16@1+ (0.01,0) [0|100] "%" VCU,TESTER
+ SG_ PackVoltage : 48|16@1+ (1,0) [0|65535] "mV" VCU,TESTER
+
+BO_ 512 SIM_PackMeas: 8 SIM
+ SG_ PackCurrent : 0|32@1- (0.001,0) [-2147483.648|2147483.647] "A" BMS
+ SG_ LinkVoltage : 32|16@1+ (1,0) [0|65535] "mV" BMS
+
+BO_ 528 SIM_CellVoltages: 8 SIM
+ SG_ CellVoltPage M : 0|8@1+ (1,0) [0|3] "" BMS
+ SG_ CellVoltage_01 m0 : 8|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_02 m0 : 24|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_03 m0 : 40|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_04 m1 : 8|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_05 m1 : 24|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_06 m1 : 40|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_07 m2 : 8|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_08 m2 : 24|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_09 m2 : 40|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_10 m3 : 8|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_11 m3 : 24|16@1+ (1,0) [0|65535] "mV" BMS
+ SG_ CellVoltage_12 m3 : 40|16@1+ (1,0) [0|65535] "mV" BMS
+
+BO_ 544 SIM_CellTemps: 8 SIM
+ SG_ CellTempPage M : 0|8@1+ (1,0) [0|3] "" BMS
+ SG_ CellTemp_01 m0 : 8|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_02 m0 : 24|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_03 m0 : 40|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_04 m1 : 8|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_05 m1 : 24|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_06 m1 : 40|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_07 m2 : 8|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_08 m2 : 24|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_09 m2 : 40|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_10 m3 : 8|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_11 m3 : 24|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+ SG_ CellTemp_12 m3 : 40|16@1- (0.1,0) [-3276.8|3276.7] "degC" BMS
+
+BO_ 1696 BMS_TestHook: 8 TESTER
+ SG_ HookId : 0|8@1+ (1,0) [0|6] "" BMS
+ SG_ TaskId : 8|8@1+ (1,0) [0|6] "" BMS
+ SG_ DurationMs : 16|16@1+ (1,0) [0|65535] "ms" BMS
+ SG_ HookParam : 32|32@1+ (1,0) [0|4294967295] "" BMS
+
+BO_ 1728 BMS_OtaRequest: 8 TESTER
+ SG_ OtaRequestType M : 0|8@1+ (1,0) [1|4] "" BMS
+ SG_ OtaTargetSlot m1 : 8|8@1+ (1,0) [0|1] "" BMS
+ SG_ OtaImageSize m1 : 16|24@1+ (1,0) [0|16777215] "B" BMS
+ SG_ OtaImageVersion m1 : 40|24@1+ (1,0) [0|16777215] "" BMS
+
+BO_ 1729 BMS_OtaData: 8 TESTER
+ SG_ OtaSeq : 0|8@1+ (1,0) [0|255] "" BMS
+ SG_ OtaPayload : 8|56@1+ (1,0) [0|72057594037927935] "" BMS
+
+BO_ 1736 BMS_OtaResponse: 8 BMS
+ SG_ OtaResponseType M : 0|8@1+ (1,0) [1|5] "" TESTER
+ SG_ OtaStatus : 8|8@1+ (1,0) [0|13] "" TESTER
+ SG_ OtaWindow m1 : 16|8@1+ (1,0) [0|255] "frames" TESTER
+ SG_ InfoRunningSlot m4 : 16|8@1+ (1,0) [0|1] "" TESTER
+ SG_ InfoConfirmed m4 : 24|1@1+ (1,0) [0|1] "" TESTER
+ SG_ InfoSessionActive m4 : 25|1@1+ (1,0) [0|1] "" TESTER
+ SG_ InfoUpdateAllowed m4 : 26|1@1+ (1,0) [0|1] "" TESTER
+ SG_ InfoRunningVersion m4 : 32|24@1+ (1,0) [0|16777215] "" TESTER
+ SG_ InfoBootReason m4 : 56|4@1+ (1,0) [0|4] "" TESTER
+ SG_ InfoBootAttempt m4 : 60|4@1+ (1,0) [0|15] "" TESTER
+ SG_ OtaNextFrame m5 : 16|24@1+ (1,0) [0|16777215] "" TESTER
+
+
+
+CM_ BU_ BMS "Battery management system (FreeRTOS firmware).";
+CM_ BU_ VCU "Vehicle control unit: commands the contactors, consumes status.";
+CM_ BU_ SIM "Battery/AFE simulator standing in for cell monitoring ICs and the current shunt.";
+CM_ BU_ TESTER "Scenario test harness (debug messages only).";
+CM_ BO_ 80 "Sent once when a fault latches. FaultValue unit depends on FaultId: mV (OV/UV), 0.1 degC (OT), mA (OC), ms (MEAS_TIMEOUT), mV link voltage (PRECHARGE), stalled task bitmask (WATCHDOG).";
+CM_ SG_ 80 CellNumber "1-based cell number, 0 when the fault is not cell specific.";
+CM_ SG_ 80 FaultsLatched "Latched fault bitfield after this event (bit n = FaultId n).";
+CM_ BO_ 96 "Contactor and fault-reset commands. E2E protected: CRC-8 SAE J1850 over Data ID 0x060 + bytes 1..7, 4-bit alive counter.";
+CM_ BO_ 256 "BMS status, cyclic 100 ms and immediately on state change. E2E protected like VCU_Command (Data ID 0x100).";
+CM_ SG_ 256 FaultsLatched "Faults tripped and not yet reset (bit n = FaultId n).";
+CM_ SG_ 256 FaultsActive "Fault conditions currently present.";
+CM_ SG_ 256 MeasValid "1 when all measurements are present and fresh; close is refused otherwise.";
+CM_ SG_ 512 PackCurrent "Positive = discharge.";
+CM_ SG_ 512 LinkVoltage "DC-link (inverter side of the contactors) voltage, used for precharge.";
+CM_ BO_ 528 "Cell voltages, multiplexed: page n carries cells 3n+1..3n+3.";
+CM_ BO_ 544 "Cell temperatures, multiplexed: page n carries cells 3n+1..3n+3.";
+CM_ BO_ 1696 "Debug and fault-injection commands for tests (stall a task, report stack usage, reboot, deliberate fault, flash faults). Only accepted when built with BMS_ENABLE_TEST_HOOKS=1.";
+CM_ SG_ 1696 HookParam "FlashFailWrite / FlashPowerLoss: the fault hits after this many more bytes are programmed.";
+CM_ BO_ 1728 "Firmware update control (see README, 'Update protocol'). Start: the BMS checks that the running image is confirmed, the slot is the inactive one, the size fits, the version is not below the anti-rollback floor and - last - that the contactors are OPEN (it takes the update lock, which makes the contactor state machine refuse CLOSE until the session ends). Finish: verify CRC + Ed25519 signature + version, stage the image, reboot. Lowest-priority IDs on the bus: an update never delays operational traffic.";
+CM_ SG_ 1728 OtaImageSize "Size of the signed image file (256-byte header + payload).";
+CM_ SG_ 1728 OtaImageVersion "major << 16 | minor << 8 | patch, as in the image header.";
+CM_ BO_ 1729 "Image data: 7 bytes per frame (the last frame may be shorter, DLC = 1 + remaining bytes). OtaSeq is the frame index modulo 256; frames must arrive in order.";
+CM_ BO_ 1736 "Replies to BMS_OtaRequest, plus DataAck: one per window of OtaWindow frames (and after the last frame); with status Sequence it asks for a retransmission starting at OtaNextFrame (go-back-N).";
+CM_ SG_ 1736 OtaNextFrame "Index of the next frame the BMS expects.";
+CM_ SG_ 1736 InfoBootReason "What the bootloader did at this boot.";
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 65535;
+BA_DEF_ BO_ "GenMsgSendType" ENUM "Cyclic","OnEvent","CyclicAndOnChange";
+BA_DEF_DEF_ "GenMsgCycleTime" 0;
+BA_DEF_DEF_ "GenMsgSendType" "OnEvent";
+BA_ "GenMsgSendType" BO_ 256 2;
+BA_ "GenMsgCycleTime" BO_ 256 100;
+BA_ "GenMsgSendType" BO_ 512 0;
+BA_ "GenMsgCycleTime" BO_ 512 10;
+BA_ "GenMsgSendType" BO_ 528 0;
+BA_ "GenMsgCycleTime" BO_ 528 50;
+BA_ "GenMsgSendType" BO_ 544 0;
+BA_ "GenMsgCycleTime" BO_ 544 50;
+VAL_ 80 FaultId 0 "CELL_OV" 1 "CELL_UV" 2 "CELL_OT" 3 "PACK_OC" 4 "MEAS_TIMEOUT" 5 "PRECHARGE" 6 "WATCHDOG" ;
+VAL_ 96 Command 0 "None" 1 "CloseContactors" 2 "OpenContactors" 3 "ResetFaults" ;
+VAL_ 256 State 0 "OPEN" 1 "PRECHARGE" 2 "CLOSED" 3 "FAULT" ;
+VAL_ 1696 HookId 0 "None" 1 "StallTask" 2 "ReportStacks" 3 "Reboot" 4 "Fault" 5 "FlashFailWrite" 6 "FlashPowerLoss" ;
+VAL_ 1696 TaskId 0 "can_rx" 1 "monitor" 2 "fault" 3 "contactor" 4 "can_tx" 5 "logger" 6 "ota" ;
+VAL_ 1728 OtaRequestType 1 "Start" 2 "Finish" 3 "Abort" 4 "GetInfo" ;
+VAL_ 1736 OtaResponseType 1 "Start" 2 "Finish" 3 "Abort" 4 "Info" 5 "DataAck" ;
+VAL_ 1736 OtaStatus 0 "Ok" 1 "NotSafe" 2 "Busy" 3 "BadSlot" 4 "TooLarge" 5 "Downgrade" 6 "Sequence" 7 "CrcError" 8 "BadSignature" 9 "BadImage" 10 "FlashError" 11 "NoSession" 12 "Timeout" 13 "Incomplete" ;
+VAL_ 1736 InfoBootReason 0 "Normal" 1 "Trial" 2 "Rollback" 3 "Fallback" 4 "None" ;
