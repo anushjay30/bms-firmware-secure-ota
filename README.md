@@ -72,6 +72,14 @@ bash scripts/demo.sh                        # the story above (needs can-utils +
 make scenario TARGET=qemu                   # all end-to-end scenarios, incl. firmware updates
 ```
 
+**No Linux? One command, any OS** (needs `qemu-system-arm` on PATH and `pip install -r sim/requirements.txt`),
+after building the images once with `make TARGET=qemu`:
+
+```bash
+python scripts/demo_local.py          # boot -> close -> overheat -> fault -> reset
+python scripts/demo_local.py --ota    # boot -> update to v2 over CAN -> confirm -> forged update rejected
+```
+
 ## Contents
 
 [Architecture](#architecture) ·
