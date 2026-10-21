@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>title</title>
+<style>
+  html,body{width:1920px;height:1080px;margin:0;overflow:hidden;background:
+    radial-gradient(1200px 700px at 50% 38%, #142338 0%, #0b0f17 70%);color:#e6edf3;
+    font-family:"Segoe UI",system-ui,sans-serif;}
+  .wrap{height:1080px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;}
+  h1{font-size:92px;font-weight:800;letter-spacing:.5px;margin:0;}
+  h1 .a{color:#4da3ff;}
+  .tag{font-size:33px;color:#aeb9c7;max-width:1250px;text-align:center;line-height:1.4;}
+  .chips{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;justify-content:center;}
+  .chip{font-size:24px;font-weight:600;padding:12px 26px;border-radius:30px;background:#141b27;
+    border:1px solid #233041;color:#cdd8e4;}
+  .chip b{color:#4da3ff;font-weight:700;}
+  .foot{position:absolute;bottom:52px;font-size:22px;color:#6b7686;}
+</style></head>
+<body><div class="wrap">
+  <h1><span class="a">BMS</span> — Battery Management System</h1>
+  <div class="tag">Automotive battery-management firmware with a secure bootloader and
+    over-the-air updates — running in simulation, no hardware required.</div>
+  <div class="chips">
+    <span class="chip"><b>FreeRTOS</b></span>
+    <span class="chip"><b>ARM Cortex-M3</b> · QEMU</span>
+    <span class="chip"><b>CAN</b> bus</span>
+    <span class="chip"><b>Ed25519</b>-signed OTA</span>
+    <span class="chip">A/B slots · rollback</span>
+  </div>
+  <div class="foot">Live dashboard driven by the real firmware over CAN</div>
+</div></body></html>

@@ -7,11 +7,11 @@ bootloader** that only starts **Ed25519-signed** images, **A/B slots with trial 
 contactors are open. It runs on an emulated Cortex-M3 (QEMU `mps2-an385`) and talks CAN to a Python battery
 simulator, so the whole thing is testable end to end without hardware.
 
-> **Demo** - *placeholder:* `docs/demo.gif`. Record it with
-> `asciinema rec demo.cast -c "bash scripts/demo.sh"` and convert with
-> [`agg`](https://github.com/asciinema/agg) `demo.cast docs/demo.gif`. The demo boots v1, closes the contactors,
-> overheats a cell (contactors open in ~200 ms), resets, updates to v2 over CAN, watches v2 confirm itself, and
-> has a forged update rejected.
+![BMS demo — fault isolation and a rejected OTA update](docs/demo.gif)
+
+> **▶ [Watch the full ~90-second demo (MP4)](docs/demo.mp4)** — a live dashboard driven by the *real firmware* over
+> CAN: boot, a cell overheats and the pack is isolated, a signed OTA update, a forged update rejected, and an
+> automatic rollback. Reproduce it with `make demo-video` (see [Watch the demo](#watch-the-demo)).
 
 **At a glance**
 - **Bootloader** (15.6 KB of its 64 KB region): reads two-copy metadata, picks a slot, verifies header, anti-rollback
@@ -82,6 +82,7 @@ python scripts/demo_local.py --ota    # boot -> update to v2 over CAN -> confirm
 
 ## Contents
 
+[Watch the demo](#watch-the-demo) ·
 [Architecture](#architecture) ·
 [Memory map](#memory-map) ·
 [Boot flow](#boot-flow) ·
@@ -102,6 +103,31 @@ python scripts/demo_local.py --ota    # boot -> update to v2 over CAN -> confirm
 [Real hardware](#what-would-change-on-real-hardware) ·
 [Limitations](#known-limitations) ·
 [Layout](#repository-layout)
+
+## Watch the demo
+
+The [demo video](docs/demo.mp4) is a web dashboard ([`dashboard/`](dashboard/)) driven entirely by the real
+firmware over CAN — nothing is mocked. A scripted scenario ([`scripts/demo_video.py`](scripts/demo_video.py)) runs
+the battery simulator against the firmware in QEMU, sets the captions, and a headless browser records the page;
+ffmpeg assembles the title/end cards and the `.mp4`/`.gif`. The fault-reaction latency shown in the captions is
+measured live (QEMU is not real-time on every host, so the firmware's clock rate is read from its 100 ms status
+cadence and the reaction time is reported in firmware time).
+
+| Time | What happens |
+|------|--------------|
+| 0:00 | Title card — FreeRTOS · ARM Cortex-M3 (QEMU) · CAN · Ed25519-signed OTA |
+| 0:05 | Bootloader verifies the Ed25519 signature and starts **v1.0** from Slot A |
+| 0:10 | VCU closes the contactors through precharge; the pack runs under load, SoC tracked by coulomb counting |
+| 0:18 | Cell 7 overheats → debounced fault → **contactors open to isolate the pack** (measured reaction time) |
+| 0:28 | Fault reset — back to a safe standby |
+| 0:33 | **OTA update to v1.1** over CAN: transfer, CRC-32 + Ed25519 verify, reboot, trial boot, health check, confirm |
+| 1:02 | An image signed with the **wrong key** is sent → **rejected**, v1.1 keeps running |
+| 1:12 | A buggy **v1.2** that never confirms → **automatic rollback** to v1.1 after 3 boots |
+| 1:25 | End card |
+
+Reproduce it with `make demo-video` (needs `pip install -r sim/requirements.txt`, plus `playwright` +
+`imageio-ffmpeg` and a one-off `python -m playwright install chromium`). For a quick terminal-only walk-through
+instead, see [`scripts/demo.sh`](scripts/demo.sh) / `python scripts/demo_local.py`.
 
 ## Architecture
 

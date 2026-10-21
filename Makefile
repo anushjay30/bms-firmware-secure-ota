@@ -255,6 +255,15 @@ test-images: all
 	        build/qemu-$$name/app_slotB.signed.bin; \
 	    cp build/qemu-$$name/app_slotB.signed.bin $(BUILD)/test-images/app_slotB_$$name.signed.bin; \
 	done
+
+# Record the captioned demo video (dashboard/ + scripts/demo_video.py) and
+# post-process it with ffmpeg into docs/demo.{mp4,gif} and a thumbnail. Needs
+# the Python packages in sim/requirements.txt plus playwright + imageio-ffmpeg
+# (and a one-off `python -m playwright install chromium`).
+demo-video: all
+	$(MAKE) --no-print-directory TARGET=qemu BUILD=build/qemu-demo-nc SHARED_BUILD=$(BUILD) \
+	    EXTRA_DEFS=-DBMS_TEST_NO_CONFIRM build/qemu-demo-nc/app_slotA.bin
+	$(PYTHON) scripts/demo_video.py
 endif
 
 build/tests/obj/%.o: %.c

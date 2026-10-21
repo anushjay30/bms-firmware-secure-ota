@@ -13,6 +13,7 @@ gives up after a number of silent retries (timeout).
 """
 from __future__ import annotations
 
+import queue
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -115,15 +116,20 @@ ProgressFn = Callable[[int, int, int], None]  # (bytes acknowledged, total bytes
 
 class OtaClient:
     def __init__(self, bus: can.BusABC, reply_timeout: float = 1.0, retries: int = 8,
-                 max_frame_rate: Optional[float] = None) -> None:
+                 max_frame_rate: Optional[float] = None, inbox: "queue.Queue | None" = None) -> None:
         """max_frame_rate: pace data frames to at most this many per second -
         a bus-load budget, as production flash tools keep, so an update leaves
-        room for operational traffic on a link without CAN arbitration."""
+        room for operational traffic on a link without CAN arbitration.
+
+        inbox: if given, response frames are read from this queue of
+        can.Message instead of bus.recv() - for sharing one bus connection
+        with another reader (the demo dashboard feeds it from its RX loop)."""
         self.bus = bus
         self.reply_timeout = reply_timeout
         self.retries = retries
         self.frame_gap = 1.0 / max_frame_rate if max_frame_rate else 0.0
         self._next_frame_t = 0.0
+        self.inbox = inbox
 
     # ---- frames ------------------------------------------------------------
 
@@ -156,14 +162,27 @@ class OtaClient:
         """Next response of one of the wanted types, or None on timeout."""
         deadline = time.monotonic() + timeout
         while (left := deadline - time.monotonic()) > 0:
-            m = self.bus.recv(timeout=left)
+            if self.inbox is not None:
+                try:
+                    m = self.inbox.get(timeout=left)
+                except queue.Empty:
+                    return None
+            else:
+                m = self.bus.recv(timeout=left)
             if m is not None and m.arbitration_id == RSP_ID and len(m.data) >= 2 and m.data[0] in want:
                 return bytes(m.data)
         return None
 
     def _drain(self) -> None:
-        while self.bus.recv(timeout=0) is not None:
-            pass
+        if self.inbox is not None:
+            try:
+                while True:
+                    self.inbox.get_nowait()
+            except queue.Empty:
+                return
+        else:
+            while self.bus.recv(timeout=0) is not None:
+                pass
 
     # ---- requests ----------------------------------------------------------
 

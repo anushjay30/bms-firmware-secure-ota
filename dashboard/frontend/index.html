@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BMS Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0f17; --panel: #141b27; --panel2: #0f1521; --line: #233041;
+    --ink: #e6edf3; --dim: #8b98a9; --accent: #4da3ff;
+    --ok: #3fb950; --warn: #d29922; --bad: #f85149; --precharge: #a371f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+    color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
+  #app { display: grid; grid-template-rows: 104px 1fr 150px 96px; height: 1080px; gap: 14px; padding: 16px 20px; }
+
+  /* ---- header ---- */
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .title h1 { font-size: 38px; font-weight: 700; letter-spacing: .3px; }
+  .title h1 .accent { color: var(--accent); }
+  .title p { font-size: 19px; color: var(--dim); margin-top: 4px; }
+  .statebadge { display: flex; align-items: center; gap: 18px; }
+  .statebadge .live { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700;
+    letter-spacing: 2px; color: var(--bad); }
+  /* an always-running animation also keeps headless Chromium emitting frames */
+  .statebadge .live .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bad);
+    animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+  .statebadge .lbl { font-size: 18px; color: var(--dim); text-transform: uppercase; letter-spacing: 2px; }
+  .statebadge .val { font-size: 46px; font-weight: 800; padding: 6px 26px; border-radius: 12px;
+    background: var(--panel); border: 2px solid var(--line); min-width: 280px; text-align: center; }
+
+  /* ---- panels ---- */
+  main { display: grid; grid-template-columns: 560px 1fr 620px; gap: 14px; min-height: 0; }
+  .col { display: grid; gap: 14px; min-height: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+    min-height: 0; display: flex; flex-direction: column; }
+  .panel h2 { font-size: 16px; font-weight: 600; color: var(--dim); text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .panel h2 .sub { color: var(--ink); font-weight: 700; letter-spacing: 0; text-transform: none; }
+
+  /* ---- cells ---- */
+  .cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 7px; flex: 1; align-items: end; }
+  .cell { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .cell .bar { width: 100%; border-radius: 5px 5px 2px 2px; background: var(--ok); transition: height .25s, background .25s; }
+  .cell .mv { font-size: 15px; font-weight: 700; margin-top: 7px; }
+  .cell .tc { font-size: 14px; color: var(--dim); }
+  .cell .n { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .cell.hot .tc { color: var(--bad); font-weight: 700; }
+
+  /* ---- gauges ---- */
+  .soc-wrap { display: flex; align-items: center; gap: 22px; }
+  .soc-canvas { position: relative; width: 190px; height: 190px; }
+  .soc-canvas .pct { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; }
+  .soc-canvas .pct b { font-size: 44px; font-weight: 800; }
+  .soc-canvas .pct span { font-size: 15px; color: var(--dim); }
+  .bigfacts { display: grid; gap: 14px; }
+  .fact .k { font-size: 15px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+  .fact .v { font-size: 34px; font-weight: 700; }
+  .fact .v small { font-size: 18px; color: var(--dim); font-weight: 500; }
+  .trend { flex: 1; min-height: 0; position: relative; }
+
+  /* ---- state machine diagram ---- */
+  .sm svg { width: 100%; height: 100%; }
+  .sm .node { fill: var(--panel2); stroke: var(--line); stroke-width: 2; }
+  .sm .node.active { stroke-width: 4; }
+  .sm text { fill: var(--ink); font-size: 19px; font-weight: 700; text-anchor: middle; }
+  .sm .edge { stroke: var(--line); stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+  .sm .caption { fill: var(--dim); font-size: 13px; font-weight: 500; }
+
+  /* ---- OTA ---- */
+  .ota-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+  .ota-grid .k { font-size: 14px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+  .ota-grid .v { font-size: 24px; font-weight: 700; margin-top: 2px; }
+  .slots { display: flex; gap: 12px; margin-top: 6px; }
+  .slot { flex: 1; border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel2); }
+  .slot.active { border-color: var(--accent); }
+  .slot .s-name { font-size: 15px; color: var(--dim); }
+  .slot .s-ver { font-size: 26px; font-weight: 800; }
+  .slot .s-tag { font-size: 13px; margin-top: 3px; }
+  .progress { height: 26px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--line);
+    overflow: hidden; margin-top: 12px; display: none; }
+  .progress .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--precharge));
+    transition: width .2s; }
+  .progress-label { font-size: 14px; color: var(--dim); margin-top: 6px; display: none; }
+
+  /* ---- fault log ---- */
+  .faultlog { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
+  .faultlog .row { display: flex; gap: 12px; padding: 7px 10px; border-radius: 7px; background: var(--panel2); }
+  .faultlog .row .ts { color: var(--dim); font-variant-numeric: tabular-nums; }
+  .faultlog .row.bad { border-left: 4px solid var(--bad); }
+  .faultlog .row.ok { border-left: 4px solid var(--ok); }
+  .faultlog .empty { color: var(--dim); font-style: italic; }
+
+  /* ---- uart terminal ---- */
+  .term { background: #05080d; border: 1px solid var(--line); border-radius: 14px; padding: 12px 18px;
+    font-family: "Cascadia Code", "Consolas", monospace; font-size: 15px; line-height: 1.45;
+    overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .term .ln { color: #9fb4c9; white-space: pre; }
+  .term .ln .b { color: var(--accent); }
+
+  /* ---- caption banner ---- */
+  .caption { display: flex; align-items: center; gap: 20px; background: linear-gradient(90deg, #11223b, #0d1726);
+    border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 14px; padding: 0 30px; }
+  .caption .chip { font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); white-space: nowrap; }
+  .caption .text { font-size: 30px; font-weight: 600; }
+  .caption.warn { border-left-color: var(--warn); } .caption.warn .chip { color: var(--warn); }
+  .caption.bad { border-left-color: var(--bad); } .caption.bad .chip { color: var(--bad); }
+  .caption.ok { border-left-color: var(--ok); } .caption.ok .chip { color: var(--ok); }
+  .caption.ota { border-left-color: var(--precharge); } .caption.ota .chip { color: var(--precharge); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">
+      <h1><span class="accent">BMS</span> &middot; Battery Management System</h1>
+      <p>FreeRTOS firmware on ARM Cortex-M3 (QEMU) &middot; CAN bus &middot; Ed25519-signed OTA updates</p>
+    </div>
+    <div class="statebadge">
+      <span class="live"><span class="dot"></span>LIVE</span>
+      <span class="lbl">Contactors</span>
+      <span class="val" id="state">OPEN</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="col">
+      <div class="panel" style="flex:1">
+        <h2>Cells <span class="sub" id="cellsub">12S &middot; Li-ion</span></h2>
+        <div class="cells" id="cells"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel">
+        <h2>Pack</h2>
+        <div class="soc-wrap">
+          <div class="soc-canvas"><canvas id="socChart"></canvas>
+            <div class="pct"><b id="soc">--</b><span>State of charge</span></div>
+          </div>
+          <div class="bigfacts">
+            <div class="fact"><div class="k">Pack voltage</div><div class="v"><span id="packv">--</span><small> V</small></div></div>
+            <div class="fact"><div class="k">Pack current</div><div class="v"><span id="packi">--</span><small> A</small></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="flex:1">
+        <h2>Pack current <span class="sub">A &middot; + discharge</span></h2>
+        <div class="trend"><canvas id="currentChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel sm">
+        <h2>Contactor state machine</h2>
+        <svg viewBox="0 0 580 150" id="smSvg">
+          <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5a6e"/></marker></defs>
+          <path class="edge" d="M118 48 L212 48"/>
+          <path class="edge" d="M330 48 L430 48"/>
+          <path class="edge" d="M270 78 L270 112"/>
+          <text class="caption" x="165" y="38">close</text>
+          <text class="caption" x="380" y="38">precharged</text>
+          <text class="caption" x="300" y="100">fault</text>
+          <rect class="node" id="n-OPEN"      x="20"  y="24" width="98" height="48" rx="10"/>
+          <rect class="node" id="n-PRECHARGE" x="214" y="24" width="116" height="48" rx="10"/>
+          <rect class="node" id="n-CLOSED"    x="430" y="24" width="98" height="48" rx="10"/>
+          <rect class="node" id="n-FAULT"     x="214" y="112" width="116" height="48" rx="10" style="transform:translateY(-16px)"/>
+          <text x="69"  y="54">OPEN</text>
+          <text x="272" y="54">PRECHARGE</text>
+          <text x="479" y="54">CLOSED</text>
+          <text x="272" y="126">FAULT</text>
+        </svg>
+      </div>
+      <div class="panel">
+        <h2>Firmware / OTA <span class="sub" id="otanote"></span></h2>
+        <div class="slots">
+          <div class="slot" id="slot-A"><div class="s-name">Slot A</div><div class="s-ver" id="slotA-ver">--</div><div class="s-tag" id="slotA-tag"></div></div>
+          <div class="slot" id="slot-B"><div class="s-name">Slot B</div><div class="s-ver" id="slotB-ver">--</div><div class="s-tag" id="slotB-tag"></div></div>
+        </div>
+        <div class="progress" id="prog"><div class="fill" id="progfill"></div></div>
+        <div class="progress-label" id="proglabel"></div>
+      </div>
+      <div class="panel" style="flex:1">
+        <h2>Fault log</h2>
+        <div class="faultlog" id="faultlog"><div class="empty">no faults</div></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="term" id="term"></div>
+
+  <div class="caption info" id="caption">
+    <span class="chip" id="cap-chip">BMS</span>
+    <span class="text" id="cap-text">Starting up&hellip;</span>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
