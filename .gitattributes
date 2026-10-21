@@ -1,0 +1,5 @@
+# Media and key material are binary: no textual diff/merge, correct handling.
+*.mp4 binary
+*.gif binary
+*.png binary
+*.pem binary
